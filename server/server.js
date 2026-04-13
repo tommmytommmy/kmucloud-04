@@ -17,33 +17,31 @@ app.use(express.json({ limit: "1mb" }));
 
 let dbConnection = null;
 
-const connectToDatabase = () => {
+const connectToDatabase = async () => {
   const required = ["DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME"];
   const missing = required.filter((k) => !process.env[k]);
   if (missing.length) {
-    return Promise.reject(new Error(`Missing env: ${missing.join(", ")}`));
+    throw new Error(`Missing env: ${missing.join(", ")}`);
   }
 
-  const connection = mysql.createConnection({
+  const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: 10,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
   });
 
-  return new Promise((resolve, reject) => {
-    connection.connect(async (err) => {
-      if (err) return reject(err);
-      console.log("DB 연결 성공");
-      try {
-        await createTranslationsTable(connection);
-        dbConnection = connection;
-        resolve(connection);
-      } catch (e) {
-        reject(e);
-      }
-    });
-  });
+  await new Promise((resolve, reject) =>
+    pool.query("SELECT 1", (err) => (err ? reject(err) : resolve())),
+  );
+  console.log("DB 연결 성공");
+  await createTranslationsTable(pool);
+  dbConnection = pool;
+  return pool;
 };
 
 const createTranslationsTable = (connection) =>
