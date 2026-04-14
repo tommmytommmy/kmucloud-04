@@ -1,5 +1,7 @@
 # 논문체 변환기 (kmucloud-04)
 
+[배포주소](http://kmucloud-04-s3.s3.us-east-1.amazonaws.com/index.html)
+
 구어체·일상 문장을 Gemini AI로 학술 논문 어투로 다시 써주는 웹 애플리케이션.
 
 ## 아키텍처
